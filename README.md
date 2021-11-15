@@ -1,6 +1,6 @@
 # serverless-bundle [![Build Status](https://img.shields.io/github/workflow/status/AnomalyInnovations/serverless-bundle/CI)](https://github.com/AnomalyInnovations/serverless-bundle/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/serverless-bundle.svg)](https://www.npmjs.com/package/serverless-bundle)
 
-serverless-bundle is a [Serverless Framework](https://www.serverless.com) plugin that optimally packages your ES6 or TypeScript Node.js Lambda functions with sensible defaults so you **don't have to maintain your own Webpack configs**. It uses the [serverless-webpack](https://www.github.com/serverless-heaven/serverless-webpack) plugin internally.
+serverless-bundle is a [Serverless Framework](https://www.serverless.com) plugin that optimally packages your ES5, ES6 or TypeScript Node.js Lambda functions with sensible defaults so you **don't have to maintain your own Webpack configs**. It uses the [serverless-webpack](https://www.github.com/serverless-heaven/serverless-webpack) plugin internally.
 
 - Only one dependency
 - Supports ES6 and TypeScript
@@ -134,7 +134,7 @@ custom:
         - echo hello > test
     rawFileExtensions:              # An array of file extensions to import using the Webpack raw-loader.
       - csv                         # Defaults to ['pem', 'txt']
-
+    sourceType: unambiguos              # Specify the source type, "script" | "module" | "unambiguous". Defaults to 'unambiguos'
 ```
 
 ### Advanced Options
