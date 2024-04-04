@@ -1,4 +1,4 @@
-# serverless-bundle [![Build Status](https://img.shields.io/github/workflow/status/AnomalyInnovations/serverless-bundle/CI)](https://github.com/AnomalyInnovations/serverless-bundle/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/serverless-bundle.svg)](https://www.npmjs.com/package/serverless-bundle)
+# serverless-bundle [![Build Status](https://img.shields.io/github/actions/workflow/status/AnomalyInnovations/serverless-bundle/ci.yml?branch=master)](https://github.com/AnomalyInnovations/serverless-bundle/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/serverless-bundle.svg)](https://www.npmjs.com/package/serverless-bundle)
 
 serverless-bundle is a [Serverless Framework](https://www.serverless.com) plugin that optimally packages your ES5, ES6 or TypeScript Node.js Lambda functions with sensible defaults so you **don't have to maintain your own Webpack configs**. It uses the [serverless-webpack](https://www.github.com/serverless-heaven/serverless-webpack) plugin internally.
 
@@ -38,11 +38,11 @@ And all this works without having to install Webpack, Babel, ESLint, esbuild, et
 +    "serverless-bundle"
 ```
 
-You can [read more about this over on Serverless Stack](https://serverless-stack.com/chapters/package-lambdas-with-serverless-bundle.html).
+You can [read more about this over on the SST Guide](https://sst.dev/chapters/package-lambdas-with-serverless-bundle.html).
 
 ---
 
-💥 The `serverless-bundle` team recently launched the [Serverless Stack Framework (SST)](https://github.com/serverless-stack/serverless-stack). SST makes it easy to build serverless apps by letting you [test your Lambda functions live](https://docs.serverless-stack.com/live-lambda-development). It's based on the many of ideas behind `serverless-bundle`.
+💥 The `serverless-bundle` team recently launched the [SST](https://github.com/serverless-stack/sst). SST makes it easy to build serverless apps by letting you [test your Lambda functions live](https://docs.sst.dev/live-lambda-development). It's based on the many of ideas behind `serverless-bundle`.
 
 ---
 
@@ -126,16 +126,18 @@ custom:
         to: './'                      # Where in the package should they go
     aliases:                        # Create an alias to 'import' modules easily with a custom path
       - Lib: custom-lib/src/lib       # For ex, replace the long 'custom-lib/src/lib' with 'Lib'
-    concatText:                     # Concatenate text files into one file on the generated package
-      - files: 'schema/*.txt'         # Where the files that need to be concatenated are currently located
-        outputPath: './'              # Where the concatenated file should go in the package
-        name: 'schema.txt'            # The name the the concatenated file should have
     packager: npm                   # Specify a packager, 'npm' or 'yarn'. Defaults to 'npm'.
     packagerOptions:                # Run a custom script in the package process
       scripts:                        # https://github.com/serverless-heaven/serverless-webpack#custom-scripts
         - echo hello > test
+    nodeModulesRelativeDir: '../'   # Useful for monorepos if you have your node_modules in the root directory
+                                      # https://github.com/serverless-heaven/serverless-webpack#node-modules--externals 
     rawFileExtensions:              # An array of file extensions to import using the Webpack raw-loader.
       - csv                         # Defaults to ['pem', 'txt']
+    minifyOptions:                  # Options for ESBuildMinifyPlugin (https://esbuild.github.io/api/#simple-options)
+      keepNames: true               # Disable symbol name mangling during minification
+    experiments:                    # Give the ability to activate and try out experimental features of Webpack
+
     sourceType: unambiguos              # Specify the source type, "script" | "module" | "unambiguous". Defaults to 'unambiguos'
 ```
 
@@ -450,7 +452,7 @@ The three options (`externals`, `forceExclude`, and `excludeFiles`) look similar
 
 - `forceExclude`
 
-  These packages are available in the Lambda runtime. Either by default (in the case of `aws-sdk`) or through a Lambda layer that you might be using. So these are not included in the Lambda package. And they are also marked as `externals`. Meaning that packages that are in `forceExclude` are automatically added to the `externals` list as well. By default, `aws-sdk` is listed in the `forceExclude`.
+  These packages are available in the Lambda runtime. Either by default (in the case of `aws-sdk`) or through a Lambda layer that you might be using. So these are not included in the Lambda package. And they are also marked as `externals`. Meaning that packages that are in `forceExclude` are automatically added to the `externals` list as well. By default, `aws-sdk` is listed in the `forceExclude` when `runtime` is lower than `nodejs18.x`.
 
 - `excludeFiles`
 
@@ -512,4 +514,4 @@ This plugin would not be possible without the amazing [serverless-webpack](https
 
 ---
 
-This plugin is maintained by [Serverless Stack](https://serverless-stack.com).
+This plugin is maintained by [SST](https://sst.dev).

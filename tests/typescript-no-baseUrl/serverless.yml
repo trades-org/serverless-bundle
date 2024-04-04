@@ -1,7 +1,9 @@
-service: service-foo
+service: my-service
 
 plugins:
-  - '../../../index'
+  - '../../index'
+
+custom:
 
 provider:
   name: aws
@@ -9,4 +11,4 @@ provider:
 
 functions:
   hello:
-    handler: src/handler.hello
+    handler: handler.hello

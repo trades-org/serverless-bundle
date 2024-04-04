@@ -9,7 +9,6 @@ const ESLintPlugin = require("eslint-webpack-plugin");
 const nodeExternals = require("webpack-node-externals");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { ESBuildMinifyPlugin } = require("esbuild-loader");
-const ConcatTextPlugin = require("concat-text-webpack-plugin");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const PermissionsOutputPlugin = require("webpack-permissions-plugin");
@@ -33,7 +32,7 @@ const servicePath = config.servicePath;
 const nodeVersion = config.nodeVersion;
 const externals = config.options.externals;
 const copyFiles = config.options.copyFiles;
-const concatText = config.options.concatText;
+const experiments = config.options.experiments;
 const esbuildNodeVersion = "node" + nodeVersion;
 const forceExclude = config.options.forceExclude;
 const ignorePackages = config.options.ignorePackages;
@@ -41,6 +40,7 @@ const rawFileExtensions = config.options.rawFileExtensions;
 const sourceType = config.options.sourceType;
 const fixPackages = convertListToObject(config.options.fixPackages);
 const tsConfigPath = path.resolve(servicePath, config.options.tsConfig);
+const minifyOptions = config.options.minifyOptions;
 
 const ENABLE_ESBUILD = config.options.esbuild;
 const ENABLE_STATS = config.options.stats;
@@ -77,19 +77,21 @@ if (
   throw `ERROR: ${config.options.tsConfig} not found.`;
 }
 
+const parsedTsConfig = parseTsConfig();
+
 if (ENABLE_TYPESCRIPT && checkInvalidTsModule()) {
   console.log("serverless-bundle: CommonJS, ES3, or ES5 are not supported");
 }
 
-function checkInvalidTsModule() {
+function parseTsConfig() {
   // Borrowed from
   // https://github.com/formium/tsdx/blob/e84e8d654c8462b8db65a3d395e2a4ba79bf1bd2/src/createRollupConfig.ts#L49-L55
   const tsConfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config;
-  const tsCompilerOptions = ts.parseJsonConfigFileContent(
-    tsConfigJSON,
-    ts.sys,
-    "./"
-  ).options;
+  return ts.parseJsonConfigFileContent(tsConfigJSON, ts.sys, "./");
+}
+
+function checkInvalidTsModule() {
+  const tsCompilerOptions = parsedTsConfig.options;
 
   const module = tsCompilerOptions.module;
   const target = tsCompilerOptions.target;
@@ -297,6 +299,9 @@ function plugins() {
     };
 
     if (ENABLE_LINTING) {
+      if (parsedTsConfig.exclude) {
+        tsEslintConfig.ignorePatterns = parsedTsConfig.exclude;
+      }
       forkTsCheckerWebpackOptions.eslint = {
         files: path.join(servicePath, "**/*.ts"),
         options: { cwd: servicePath, baseConfig: tsEslintConfig },
@@ -370,18 +375,6 @@ function plugins() {
     plugins.push(new PermissionsOutputPlugin({ buildFiles }));
   }
 
-  if (concatText) {
-    const concatTextConfig = {};
-
-    concatText.map(function (data) {
-      concatTextConfig.files = data.files || null;
-      concatTextConfig.name = data.name || null;
-      concatTextConfig.outputPath = data.outputPath || null;
-    });
-
-    plugins.push(new ConcatTextPlugin(concatTextConfig));
-  }
-
   // Ignore all locale files of moment.js
   plugins.push(
     new webpack.IgnorePlugin({
@@ -409,7 +402,7 @@ function plugins() {
 function resolvePlugins() {
   const plugins = [];
 
-  if (ENABLE_TYPESCRIPT) {
+  if (ENABLE_TYPESCRIPT && (parsedTsConfig.options || {}).baseUrl) {
     plugins.push(
       new TsconfigPathsPlugin({
         configFile: tsConfigPath,
@@ -471,10 +464,12 @@ module.exports = {
         minimizer: [
           new ESBuildMinifyPlugin({
             target: esbuildNodeVersion,
+            ...minifyOptions,
           }),
         ],
       },
   plugins: plugins(),
+  experiments,
   node: {
     __dirname: false,
   },
